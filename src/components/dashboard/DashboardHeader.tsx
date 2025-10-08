@@ -1,7 +1,8 @@
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
-import { BookOpen, LogOut, Moon, Sun } from "lucide-react";
+import { BookOpen, LogOut, Moon, Sun, User as UserIcon, Globe } from "lucide-react";
 import { useTheme } from "next-themes";
+import { useNavigate } from "react-router-dom";
 
 interface DashboardHeaderProps {
   user: User | null;
@@ -10,6 +11,7 @@ interface DashboardHeaderProps {
 
 export const DashboardHeader = ({ user, onSignOut }: DashboardHeaderProps) => {
   const { theme, setTheme } = useTheme();
+  const navigate = useNavigate();
 
   return (
     <header className="h-16 border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
@@ -29,6 +31,24 @@ export const DashboardHeader = ({ user, onSignOut }: DashboardHeaderProps) => {
         </div>
 
         <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate("/public-notes")}
+            title="View Public Notes"
+            className="rounded-lg"
+          >
+            <Globe className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate("/profile")}
+            title="Profile"
+            className="rounded-lg"
+          >
+            <UserIcon className="h-5 w-5" />
+          </Button>
           <Button
             variant="ghost"
             size="icon"

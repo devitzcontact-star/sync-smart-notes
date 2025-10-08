@@ -20,30 +20,39 @@ export type Database = {
           created_at: string | null
           id: string
           is_favorite: boolean | null
+          is_public: boolean | null
+          slug: string | null
           tags: string[] | null
           title: string
           updated_at: string | null
           user_id: string
+          view_count: number | null
         }
         Insert: {
           content?: string | null
           created_at?: string | null
           id?: string
           is_favorite?: boolean | null
+          is_public?: boolean | null
+          slug?: string | null
           tags?: string[] | null
           title?: string
           updated_at?: string | null
           user_id: string
+          view_count?: number | null
         }
         Update: {
           content?: string | null
           created_at?: string | null
           id?: string
           is_favorite?: boolean | null
+          is_public?: boolean | null
+          slug?: string | null
           tags?: string[] | null
           title?: string
           updated_at?: string | null
           user_id?: string
+          view_count?: number | null
         }
         Relationships: []
       }

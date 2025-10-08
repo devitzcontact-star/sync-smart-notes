@@ -3,20 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Sparkles, Star, Save, Plus, X, Loader2 } from "lucide-react";
+import { Sparkles, Star, Save, Plus, X, Loader2, Globe, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
-
-interface Note {
-  id: string;
-  title: string;
-  content: string;
-  tags: string[];
-  is_favorite: boolean;
-  created_at: string;
-  updated_at: string;
-}
+import { Note } from "@/hooks/useNotes";
 
 interface NoteEditorProps {
   note: Note | undefined;
@@ -30,6 +24,7 @@ export const NoteEditor = ({ note, onUpdateNote, onRefetch }: NoteEditorProps) =
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");
   const [isFavorite, setIsFavorite] = useState(false);
+  const [isPublic, setIsPublic] = useState(false);
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [summary, setSummary] = useState("");
   const { toast } = useToast();
@@ -40,6 +35,7 @@ export const NoteEditor = ({ note, onUpdateNote, onRefetch }: NoteEditorProps) =
       setContent(note.content);
       setTags(note.tags || []);
       setIsFavorite(note.is_favorite);
+      setIsPublic(note.is_public || false);
       setSummary("");
     }
   }, [note]);
@@ -80,6 +76,19 @@ export const NoteEditor = ({ note, onUpdateNote, onRefetch }: NoteEditorProps) =
     if (note) {
       onUpdateNote(note.id, { is_favorite: newFavorite });
     }
+  };
+
+  const handleTogglePublic = async (checked: boolean) => {
+    if (!note) return;
+    setIsPublic(checked);
+    await onUpdateNote(note.id, { is_public: checked });
+    
+    toast({
+      title: checked ? "Note made public" : "Note made private",
+      description: checked 
+        ? "Your note is now visible to everyone" 
+        : "Your note is now private",
+    });
   };
 
   const handleSummarize = async () => {
@@ -151,18 +160,29 @@ export const NoteEditor = ({ note, onUpdateNote, onRefetch }: NoteEditorProps) =
             onBlur={handleSave}
             className="text-2xl font-bold border-none focus-visible:ring-0 px-0 h-auto"
           />
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleToggleFavorite}
-            className="shrink-0"
-          >
-            <Star
-              className={`h-5 w-5 ${
-                isFavorite ? "fill-accent text-accent" : "text-muted-foreground"
-              }`}
-            />
-          </Button>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleToggleFavorite}
+            >
+              <Star
+                className={`h-5 w-5 ${
+                  isFavorite ? "fill-accent text-accent" : "text-muted-foreground"
+                }`}
+              />
+            </Button>
+            <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-muted/50">
+              {isPublic ? (
+                <Globe className="h-4 w-4 text-primary" />
+              ) : (
+                <Lock className="h-4 w-4 text-muted-foreground" />
+              )}
+              <span className="text-xs font-medium">
+                {isPublic ? "Public" : "Private"}
+              </span>
+            </div>
+          </div>
           <Button
             variant="default"
             size="sm"
@@ -217,37 +237,59 @@ export const NoteEditor = ({ note, onUpdateNote, onRefetch }: NoteEditorProps) =
         </div>
 
         <div className="w-full lg:w-96 border-t lg:border-l lg:border-t-0 border-border p-6 space-y-4 bg-card/20 overflow-y-auto">
-          <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-lg">AI Summary</h3>
-            <Button
-              onClick={handleSummarize}
-              disabled={isSummarizing || !content.trim()}
-              size="sm"
-              className="gap-2 bg-gradient-to-r from-primary to-accent hover:opacity-90"
-            >
-              {isSummarizing ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Summarizing...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="h-4 w-4" />
-                  Summarize
-                </>
-              )}
-            </Button>
-          </div>
+          <div className="space-y-4">
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold text-lg">AI Summary</h3>
+                <Button
+                  onClick={handleSummarize}
+                  disabled={isSummarizing || !content.trim()}
+                  size="sm"
+                  className="gap-2 bg-gradient-to-r from-primary to-accent hover:opacity-90"
+                >
+                  {isSummarizing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Summarizing...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4" />
+                      Summarize
+                    </>
+                  )}
+                </Button>
+              </div>
 
-          {summary ? (
-            <Card className="p-4 bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20">
-              <p className="text-sm leading-relaxed">{summary}</p>
-            </Card>
-          ) : (
-            <div className="text-center py-8 text-muted-foreground text-sm">
-              Click "Summarize" to get an AI-powered summary of your note
+              {summary ? (
+                <Card className="p-4 bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20">
+                  <p className="text-sm leading-relaxed">{summary}</p>
+                </Card>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground text-sm">
+                  Click "Summarize" to get an AI-powered summary of your note
+                </div>
+              )}
             </div>
-          )}
+
+            <Separator />
+
+            <Card className="p-4 bg-card/50">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="public-toggle" className="flex flex-col gap-1 cursor-pointer">
+                  <span className="font-semibold">Public Access</span>
+                  <span className="text-xs text-muted-foreground">
+                    Make this note visible to everyone
+                  </span>
+                </Label>
+                <Switch
+                  id="public-toggle"
+                  checked={isPublic}
+                  onCheckedChange={handleTogglePublic}
+                />
+              </div>
+            </Card>
+          </div>
         </div>
       </div>
     </div>
