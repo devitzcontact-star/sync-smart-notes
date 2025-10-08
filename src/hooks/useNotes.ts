@@ -121,9 +121,16 @@ export const useNotes = () => {
 
   const deleteNote = async (id: string) => {
     try {
+      // Optimistic UI update for instant feedback
+      setNotes((prev) => prev.filter((n) => n.id !== id));
+
       const { error } = await supabase.from("notes").delete().eq("id", id);
 
-      if (error) throw error;
+      if (error) {
+        // Revert on failure by refetching
+        await fetchNotes();
+        throw error;
+      }
 
       toast({
         title: "Note deleted",
